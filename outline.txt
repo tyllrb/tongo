@@ -9,14 +9,17 @@ Tongo.collection ('profiles');
 
 /* Define a document template */
 Tongo.template ('Profile', {
-	'username': null,
-	'password': null,
+	'userId': Number,
+	'username': String,
+	'password': String,
 	'pic': 'default.png',
 	'order': {
-		'drink': null,
-		'food': null
+		'drink': String,
+		'food': String
 	},
-	'age': null,
+	'likes': [1, 2],
+	'notifications': [],
+	'age': Number,
 	'banned': false
 });
 
@@ -39,6 +42,22 @@ Tongo.post({
 .into ('comments')
 .then (function (doc) {
 	// doc is the freshly created document
+});
+
+/* User comments on a product, anybody who has liked the product will get a notification of the users new comment */
+Tongo.post({
+	'username': 'Tyler',
+	'productId': productId,
+	'body': 'Cool message',
+})
+.into ('comments')
+.then (function (doc) {
+	Tongo.put ({'notifications:add': 'Tyler commented!'})
+	.where ({'likes:has': productId})
+	.into ('profiles')
+	.then (function () {
+		// success
+	});
 });
 
 
@@ -72,6 +91,12 @@ Tongo.get ().descending ('age').limit (10).from ('profiles')
 	//array of profiles
 });
 
+/* Woah, pretty fucking cool */
+Tongo.get ().where ({'productId': 42}).from ('products', 'comments')
+.then (function (product, comment) {
+
+});
+
 /* Quickly check if there is any document in the collection that has a given field with specified value */
 Tongo.exists ({'username': 'Tyler'}).from ('profiles')
 .then (function (yes) {
@@ -98,26 +123,50 @@ Tongo.put ({'banned': true}).where ({'username': 'Tyler'}).into ('profiles')
 	// array of the updated documents
 });
 
-
-
-
-
-/* update a new user */
-
-tydb.put ({'username': 'Tyler2'}).from ('document')
-
-tydb.put ({
-	'username': 'Tylrt3',
-	'more': 'shit'
-})
-.where ({
-	'username': 'Tyler2'
-})
-.from ('document')
-.success (function () {
-	
-})
-.error (function () {
-	
+/* Add '2' to the likes array in all the documents */
+Tongo.put ({'likes:add', 2}).into ('profiles')
+.then (function (doc) {
+	// the updated doc
 });
 
+/* Array operations are like so: */
+
+	{'likes:add', 2} // add '2' to the array
+	{'likes:delete': 3} // delete any occurance of '3' in the array
+	{'likes:deleteAt': 0} // delete the value at index 0 in the array
+
+
+
+/***********************************
+
+	DELETE operations
+
+************************************/
+
+/* Delete a document based on some criteria */
+Tongo.delete ().where ({'username': 'Tyler'}).from ('profiles')
+.then (function (doc) {
+	// the deleted document
+});
+
+/* Delete all documents in a collection */
+Tongo.delete ().from ('profiles')
+.then (function (docs) {
+	// array of all the deleted docs
+});
+
+/* Delete a particular field from every document in the collection */
+Tongo.delete ('age').from ('profiles');
+
+/* Delete errrting */
+Tongo.delete ()
+
+
+
+/***********************************
+
+	other operations
+
+************************************/
+
+Tongo.
