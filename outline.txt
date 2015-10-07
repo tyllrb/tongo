@@ -134,6 +134,7 @@ Tongo.put ({'likes:add', 2}).into ('profiles')
 	{'likes:add', 2} // add '2' to the array
 	{'likes:delete': 3} // delete any occurance of '3' in the array
 	{'likes:deleteAt': 0} // delete the value at index 0 in the array
+	{'likes:has', 8} // check to see if array has the value '7' in it
 
 
 
