@@ -1,0 +1,123 @@
+/***********************************
+
+	POST operations
+
+************************************/
+
+/* Create a new collection */
+Tongo.collection ('profiles');
+
+/* Define a document template */
+Tongo.template ('Profile', {
+	'username': null,
+	'password': null,
+	'pic': 'default.png',
+	'order': {
+		'drink': null,
+		'food': null
+	},
+	'age': null,
+	'banned': false
+});
+
+/* Insert a new instance of a document */
+Tongo.fork ('Profile').post({
+	'username': 'Tyler',
+	'password': 'pass',
+	'order.drink': 'Pepsi'
+})
+.into ('profiles')
+.then (function (doc) {
+	// doc is the freshly created document
+});
+
+/* Insert a new document */
+Tongo.post({
+	'username': 'Tyler',
+	'comment': 'Cool :)'
+})
+.into ('comments')
+.then (function (doc) {
+	// doc is the freshly created document
+});
+
+
+/***********************************
+
+	GET operations
+
+************************************/
+
+/* Get all documents from a collection */
+Tongo.get ().from ('profiles')
+.then (function (profiles) {
+	// array of profiles
+});
+
+/* Get the usernames and ages from all documents from a collection */
+Tongo.get ('username', 'age').from ('profiles')
+.then (function (usernames) {
+	// array of usernames and ages
+});
+
+/* Get all usernames of the users who are older than 18 */
+Tongo.get ('username').where ({'age': '>=18'}).from ('profiles')
+.then (function (usernames) {
+	// array of usernames
+});
+
+/* Get the ten oldest users profiles */
+Tongo.get ().descending ('age').limit (10).from ('profiles')
+.then (function (profiles) {
+	//array of profiles
+});
+
+/* Quickly check if there is any document in the collection that has a given field with specified value */
+Tongo.exists ({'username': 'Tyler'}).from ('profiles')
+.then (function (yes) {
+	// if yes is true it exists, if false then it does not
+});
+
+
+
+/***********************************
+
+	PUT operations
+
+************************************/
+
+/* Update certain field in all documents in collection */
+Tongo.put ({'banned': true}).into ('profiles')
+.then (function (doc) {
+	// array of the updated documents
+});
+
+/* Update certain fields in some particular document(s) in collection */
+Tongo.put ({'banned': true}).where ({'username': 'Tyler'}).into ('profiles')
+.then (function (doc) {
+	// array of the updated documents
+});
+
+
+
+
+
+/* update a new user */
+
+tydb.put ({'username': 'Tyler2'}).from ('document')
+
+tydb.put ({
+	'username': 'Tylrt3',
+	'more': 'shit'
+})
+.where ({
+	'username': 'Tyler2'
+})
+.from ('document')
+.success (function () {
+	
+})
+.error (function () {
+	
+});
+
