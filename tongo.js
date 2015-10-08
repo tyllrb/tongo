@@ -1,31 +1,29 @@
-var mongo = require ('mongodb').MongoClient;
+
 
 var Tongo = {
-	self:this,
-	mongodb:null,
+	mongo: require ('mongodb').MongoClient,
+	mongodb: null,
 
 	query: {},
 	templates: {},
 	workingDocument: null,
 
 	clear: function () {
-		this.query.projections = {};
-		this.query.filter = {};
-		this.query.updateFields = {};
+		this.query.projections = null;
+		this.query.filter = null;
+		this.query.updateFields = null;
 		this.query.limit = 0;
 		this.query.order = 0;
 		this.query.orderField = null;
 		this.query.justCheck = false;
-
-		this.workingDocument = null;
+		this.query.workingDocument = null;
 	},
 
 	connect: function (settings) {
-		// need better place for this eventually
+		self = this;
 		this.clear();
 
 		var serverString = 'mongodb://' + settings.user + ':' + settings.password + '@' + settings.server + '/' + settings.database;
-		console.log(serverString);
 		
 		return new Promise (
 			function (resolve, reject) {
@@ -34,11 +32,12 @@ var Tongo = {
 						reject();
 
 					else {
-						mongodb = db;
+						self.mongodb = db;
 						resolve();
 					}
 				});
-			});
+			}
+		);
 	},
 
 	template: function (name, object) {
@@ -81,7 +80,7 @@ var Tongo = {
 	},
 
 	put: function (object) {
-		this.query.updateFields = object;
+		this.query.updateFields = {'$set': object};
 		return this;
 	},
 
@@ -97,6 +96,8 @@ var Tongo = {
 			function (resolve, reject) {
 				var results = {};
 				
+				console.log(collections);
+
 				function forEach (list, action, finished) {
 					if (list.length == 0) {
 						finished ();
@@ -119,16 +120,16 @@ var Tongo = {
 				function runQuery (collection, query, callback) {
 					if (self.query.workingDocument) {
 						console.log("Inserting " + JSON.stringify(self.workingDocument) + " into " + collection);
-						mongodb.collection (collection).insert(self.workingDocument, function (error, result) {
+						self.mongodb.collection (collection).insert(self.workingDocument, function (error, result) {
 							if (error || !result) callback (true);
 
 							else callback (false, result);
 						});
 					}
 
-					else if (self.query.updateFields.length) {
+					else if (self.query.updateFields) {
 						console.log("Updating " + JSON.stringify(self.query.updateFields) + " into " + collection);
-						mongodb.collection (collection).update(self.query.filter, self.query.updateFields, function (error, result) {
+						self.mongodb.collection (collection).update(self.query.filter, self.query.updateFields, function (error, result) {
 							if (error || !result) callback (true);
 
 							else callback (false, result);
@@ -144,9 +145,13 @@ var Tongo = {
 	},
 
 	get: function () {
+		var buildProjections = {};
+
 		for (var i = 0; i < arguments.length; i++) {
-			this.query.projections [arguments [i]] = 1;
+			buildProjections [arguments [i]] = 1;
 		}
+
+		this.query.projections = buildProjections;
 		return this;
 	},
 
@@ -238,7 +243,7 @@ var Tongo = {
 				}
 
 				function runQuery (collection, query, callback) {
-					mongodb.collection (collection).find(query.filter, { fields: query.projections }).limit(query.limit).sort(query.order).toArray(function (error, result) {
+					self.mongodb.collection (collection).find(query.filter, { fields: query.projections }).limit(query.limit).sort(query.order).toArray(function (error, result) {
 						if (error || !result) callback (true);
 
 						else callback (false, result);
@@ -274,9 +279,21 @@ var Tongo = {
 				}]
 
 				*/
-			});
+			}
+		);
 	}
 }
+
+Tongo.template('user', {
+	'username': null,
+	'password': null,
+	'created': '$timestamp',
+	'age': null,
+	'barcde': '$uid',
+	'notifications': null,
+	'skills': null,
+});
+
 
 
 Tongo.connect({
@@ -288,15 +305,10 @@ Tongo.connect({
 .then (function () {
 
 	/*
-	Tongo.get('username', 'body', 'published').where ({'userId': 1}).from ('profiles', 'comments')
-	.then (function (results) {
-		console.log(results);
-	});
-	*/
-
-	Tongo.put({'username': 'Bob'});
-	
-}, function () {
-	console.log ("Could not connect to database");
+	Tongo.put({'username': 'Bob'}).where({'userId':2}).into('profiles')
+	.then (function (data) {
+		console.log(data);
+	});*/
 });
-//Tongo.get({'name': 'tyler'})
+
+
