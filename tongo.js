@@ -1,20 +1,35 @@
 
 
 var Tongo = {
+
+	/* Dependencies */
 	mongo: require ('mongodb').MongoClient,
+	crypto: require('crypto'),
+	async: require('async'),
+
+	/* Client object */
 	mongodb: null,
-
+	/* Query object, holds the query parameters */
 	query: {},
+	/* Defines a document that can be reused for inserting into a collection */
 	templates: {},
-	workingDocument: null,
+	/* Simple cache. */
+	cache: {},
 
+	/* Flush the query object of old values */
 	clear: function () {
+		/* Projections are conditions for what certain fields should be, works similiar to a WHERE statement */
 		this.query.projections = null;
+		/* The fields to get from the document being queried */
 		this.query.filter = null;
+		/* When performing an update, the fields that will be modified */
 		this.query.updateFields = null;
 		this.query.limit = 0;
 		this.query.order = 0;
+		this.query.pageOffset = 0;
+		this.query.single = false;
 		this.query.orderField = null;
+		this.query.addToArray = null;
 		this.query.justCheck = false;
 		this.query.workingDocument = null;
 	},
@@ -40,47 +55,84 @@ var Tongo = {
 		);
 	},
 
-	template: function (name, object) {
-		for (var field in object) {
-			if (field == '$timestamp')
-				object [field] = Math.floor(Date.now() / 1000);
-
-			else if (field == '$uid') {
-				object [field] = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-					var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-					return v.toString(16);
-				});
-			}
-
-			else if (field == '$counter') {
-
-			}
-		}
+	model: function (name, object) {
 		this.templates [name] = object;
 	},
 
+	use: function (name, func) {
+		this [name] = func;
+	},
+
+	single: function () {
+		this.query.single = true;
+
+		return this;
+	},
+
 	fork: function (name) {
-		this.workingDocument = (this.templates [name]) ? this.templates [name] : null;
+		this.query.workingDocument = (name in this.templates) ? JSON.parse(JSON.stringify(this.templates [name])) : null;
 
 		return this;
 	},
 
 	post: function (object) {
-		if (this.workingDocument == null) 
-			this.workingDocument = object;
+		if (this.query.workingDocument == null) 
+			this.query.workingDocument = object;
 
-		else {
-			for (var field in object) {
-				this.workingDocument [field] = object [field];
-			}
+		for (var field in this.query.workingDocument) {
+			if (this.query.workingDocument [field] == '$timestamp') 
+				this.query.workingDocument [field] = Math.floor(Date.now() / 1000);
+
+			else if (this.query.workingDocument [field] == '$id') 
+				this.query.workingDocument [field] = Math.random().toString(36).substring(2, 12);
+
+			else if (field in object) 
+				this.query.workingDocument [field] = object [field];
 		}
 
-		console.log(this.workingDocument);
 		return this;
 	},
 
 	put: function (object) {
-		this.query.updateFields = {'$set': object};
+		this.query.updateFields = {};
+		var addFields = {};
+		var pushFields = {};
+		var removeFields = {};
+
+		for (var field in object) {
+			var parse = field.split(':');
+
+			if (parse.length > 1) {
+				switch (parse [1]) {
+					case 'add':
+						addFields[parse [0]] = object [field];
+						delete object [field];
+						break;
+
+					case 'push':
+						pushFields[parse [0]] = object [field];
+						delete object [field];
+						break;
+
+					case 'remove': 
+						removeFields[parse [0]] = object [field];
+						break;
+				}
+			}
+
+			else
+				this.query.updateFields ['$set'] = object;
+		}
+
+		if (Object.keys(addFields).length)
+			this.query.updateFields ['$addToSet'] = addFields;
+
+		if (Object.keys(pushFields).length)
+			this.query.updateFields ['$push'] = pushFields;
+
+		if (Object.keys(removeFields).length)
+			this.query.updateFields ['$pull'] = removeFields;
+
 		return this;
 	},
 
@@ -96,52 +148,51 @@ var Tongo = {
 			function (resolve, reject) {
 				var results = {};
 				
-				console.log(collections);
+				self.async.each(collections, processQuery, function () {
+					self.clear();
+					resolve(results);
+				});
 
-				function forEach (list, action, finished) {
-					if (list.length == 0) {
-						finished ();
-						return;
-					}
-
-					var item = list.shift();
-
-					action (item, self.query, function (error, data) {
-						if (error) 
-							reject ();
-
-						else {
-							results [item] = data;
-							forEach (list, runQuery, finished);
-						}
-					});
-				}
-
-				function runQuery (collection, query, callback) {
+				function processQuery(collection, finished) {
 					if (self.query.workingDocument) {
-						console.log("Inserting " + JSON.stringify(self.workingDocument) + " into " + collection);
-						self.mongodb.collection (collection).insert(self.workingDocument, function (error, result) {
-							if (error || !result) callback (true);
+						//console.log.log("Doing an insert");
+						////console.log.log("Inserting " + JSON.stringify(self.query.workingDocument) + " into " + collection);
+						self.mongodb.collection (collection).insert(self.query.workingDocument, function (error, result) {
+							if (error || !result)
+								console.log("ERROR (0x100 Could not execute query) " + error);
 
-							else callback (false, result);
+							results [collection] = self.query.workingDocument;
+							return finished(null);
 						});
 					}
 
 					else if (self.query.updateFields) {
-						console.log("Updating " + JSON.stringify(self.query.updateFields) + " into " + collection);
+						//console.log.log("Doing an update");
+						//console.log.log(query);
 						self.mongodb.collection (collection).update(self.query.filter, self.query.updateFields, function (error, result) {
-							if (error || !result) callback (true);
+							if (error || !result) 
+								console.log("ERROR (0x100 Could not execute query) " + error);
 
-							else callback (false, result);
+							else {
+								self.mongodb.collection (collection).find(self.query.filter).limit(10).toArray(function (error, updatedDoc) {
+									if (error || !updatedDoc) 
+										console.log("ERROR fetching recent inserted document");
+
+									else {
+										if (updatedDoc.length > 1)
+											results [collection] = updatedDoc;
+										else
+											results [collection] = updatedDoc [0];
+									}
+
+									return finished(null);
+								});
+							}
 						});
 					}
 				}
-
-				forEach (collections, runQuery, function () {
-					self.clear();
-					resolve(true);
-				});
-			})
+			}
+		);
 	},
 
 	get: function () {
@@ -170,11 +221,21 @@ var Tongo = {
 
 					case 'all':
 						criteria [parse [0]] = { $all: query [field] };
+						break;
+
+					case 'hash':
+						//////console.log.log(parse[0] + " ==> md5(" + query [field] + ") equals " + self.crypto.createHash ('md5').update (query [field]).digest ('hex'));
+						criteria [parse [0]] = self.crypto.createHash ('md5').update (query [field]).digest ('hex');
+						break;
+
+					case 'ignoreCase':
+						criteria [parse [0]] = query [field];
+						break;
 				}
 			}
 
 			else 
-				criteria = query;
+				criteria [field] = query [field];
 		}
 		
 		this.query.filter = criteria;
@@ -182,8 +243,17 @@ var Tongo = {
 	},
 
 	limit: function (amount) {
-		if (amount > 0)
-			this.query.limit = amount; 
+		var parseAmount = parseInt(amount);
+
+		if (parseAmount > 0)
+			this.query.limit = parseAmount;
+
+		return this;
+	},
+
+	page: function (pageOffset) {
+		this.query.pageOffset = pageOffset;
+
 		return this;
 	},
 
@@ -218,97 +288,71 @@ var Tongo = {
 
 		return new Promise (
 			function (resolve, reject) {
-				//if (!collections.length) reject ();
-
 				var results = {};
-
-				console.log("---------------");
-				console.log("Constructed query: ");
-				console.log(self.query);
-				console.log("---------------");
-
 				
-				function forEach (list, action, finished) {
-					if (list.length == 0) {
-						finished ();
-						return;
-					}
-
-					var item = list.shift();
-
-					action (item, self.query, function (error, data) {
-						results [item] = data;
-						forEach (list, runQuery, finished);
-					});
-				}
-
-				function runQuery (collection, query, callback) {
-					self.mongodb.collection (collection).find(query.filter, { fields: query.projections }).limit(query.limit).sort(query.order).toArray(function (error, result) {
-						if (error || !result) callback (true);
-
-						else callback (false, result);
-					});
-				}
-
-				forEach (collections, runQuery, function () {
+				self.async.each(collections, processQuery, function () {
 					self.clear();
 					resolve(results);
 				});
 
-				
+				function processQuery(collection, finished) {
+					if (self.query.single) {
+						self.mongodb.collection (collection).findOne(self.query.filter, { fields: self.query.projections }, function (error, result) {
+							if (error || !result) {
+								console.log ("ERROR (x101 Could not execute query) " + error);
+								results [collection] = false;
+							}
 
-				/*
-				if (self.query.justCheck) {
-					mongodb.collection (collection).find(self.query.filter).limit(1).toArray (function (error, result) {
-						if (error) reject();
-						else if (result.length) resolve (true);
-						else resolve (false);
-					});
+							else
+								results [collection] = result;
+							
+							return finished(null);
+						});
+					}
+
+					else {
+						self.mongodb.collection (collection).find(self.query.filter, { fields: self.query.projections }).limit(self.query.limit).sort(self.query.order).skip(self.query.limit * self.query.pageOffset).toArray(function (error, result) {
+							if (error || !result) {
+								console.log("ERROR (x101 Could not execute query) " + error);
+								results [collection] = false;
+							}
+
+							else
+								results [collection] = result;
+							
+							return finished(null);
+						});
+					}
 				}
-
-				else {
-					mongodb.collection (collection).find(self.query.filter, { fields: self.query.projections }).limit(self.query.limit).sort(self.query.order).toArray(function (error, result) {
-						if (error || !result) reject();
-						else resolve(result);
-					});
-				}
-		
-				[{
-					'asd':'asdsa',
-					'asda':'asdasd'
-				}]
-
-				*/
 			}
 		);
 	}
 }
 
-Tongo.template('user', {
-	'username': null,
-	'password': null,
-	'created': '$timestamp',
-	'age': null,
-	'barcde': '$uid',
-	'notifications': null,
-	'skills': null,
-});
+var Cache = {
 
+	cache: {},
+	cacheLimit: 100,
 
+	add: function (field, value) {
+		var fields = Object.keys(cache);
 
-Tongo.connect({
-	'user': 'oskar',
-	'password': 'password',
-	'server': 'ds047901.mongolab.com:47901',
-	'database': 'tongotest'
-})
-.then (function () {
+		if (fields.length >= cacheLimit) {
+			delete cache [fields [0]];
+		}
 
-	/*
-	Tongo.put({'username': 'Bob'}).where({'userId':2}).into('profiles')
-	.then (function (data) {
-		console.log(data);
-	});*/
-});
+		cache [field] = value;
+
+		console.log(cache);
+	},
+
+	has: function (field) {
+		return cache [field];
+	}
+
+}
+
+module.exports = Tongo;
+
 
 
