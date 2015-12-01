@@ -1,0 +1,9 @@
+{
+	"name": "tongo-tests",
+	"description": "Testing tongo functionality bruv",
+	"version": "0.0.1",
+	"dependencies": {
+		"mongodb": "*",
+		"async": "*"
+	}
+}
