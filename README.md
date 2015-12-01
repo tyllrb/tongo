@@ -32,7 +32,7 @@ Tongo.connect({
 ## How to get things from the database
 
 ### GET
-Use ```get``` to get the values of specific fields from a collection. Use '*' to get all the fields. 
+Use ```get``` to get the values of specific fields from a collection. Use ```*``` to get all the fields. 
 
 ```javascript
 Tongo.get(
@@ -70,8 +70,8 @@ Tongo.get(
 #### WHERE operations
 You can specify certain operations for the fields specified in ```WHERE```. 
 
-* :hash will hash the value you are passing in
-* :any is used for fields with arrays, checks to see if the value(s) you have passed in is found in the array
+* ```:hash``` will hash the value you are passing in
+* ```:any``` is used for fields with arrays, checks to see if the value(s) you have passed in is found in the array
 
 Example:
 ```Javascript
@@ -101,7 +101,7 @@ Tongo.get(
 });
 ```
 
-Here the 'data' will be an object with a field for the results of getting 'users', and a field for the results of getting 'comments'.
+Here the ```data``` will be an object with a field for the results of getting ```'users'```, and a field for the results of getting ```'comments'```.
 
 ### GET single record
 Use ```single``` to query for a single document, useful for when you are expecting just one result.
@@ -199,8 +199,8 @@ Tongo.post({
 #### POST aliases
 There are few aliases you can use to generate certain values. 
 
-* $timestamp will generate a UNIX timestamp 
-* $id will generate a random 
+* ```$timestamp``` will generate a UNIX timestamp 
+* ```$id``` will generate a random 
 
 Heres how to use them:
 
