@@ -200,7 +200,7 @@ Tongo.post({
 There are few aliases you can use to generate certain values. 
 
 * ```$timestamp``` will generate a UNIX timestamp 
-* ```$id``` will generate a random 
+* ```$id``` will generate a random string
 
 Heres how to use them:
 
