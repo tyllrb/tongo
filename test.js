@@ -8,14 +8,8 @@ Tongo.connect({
 })
 .then (function () {
 
-	Tongo.get(
-		'username',
-		'password',
-		'userId'
-	)
-	.from('users')
-	.then(function (result) {
-		console.log(result);
+	Tongo.get('*').single().from('users').then(function (data) {
+		console.log(data);
 	});
 
 });
