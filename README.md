@@ -32,7 +32,7 @@ Tongo.connect({
 ## How to get things from the database
 
 ### GET
-Use ```get``` to get the values of specific fields from a collection. Use ```*``` to get all the fields. 
+Use ```get``` and ```from``` to get the values of specific fields from a collection. Use ```*``` to get all the fields. Note that ```from``` must be the last call on the chain, it is the function that returns the promise. 
 
 ```javascript
 Tongo.get(
@@ -122,7 +122,7 @@ Tongo.get(
 ```
 
 ### Paging
-Use ```page``` to jump forward in the data by a certain amount. Fetching 3 documents on page 0 will get you the first 3 documents, fetching 3 documents on page 1 will get you the 3rd, 4th, and 5th document, fetching 3 documents on page 2 will get you the 6th, 7th, and 8th record, and so on. Useful for implementing paging controls in your UI. 
+Use ```page``` and ```limit``` to jump forward in the data by a certain amount. Fetching 3 documents on page 0 will get you the first 3 documents, fetching 3 documents on page 1 will get you the 3rd, 4th, and 5th document, fetching 3 documents on page 2 will get you the 6th, 7th, and 8th record, and so on. Useful for implementing paging controls in your UI. 
 
 ```javascript
 Tongo.get(
@@ -146,10 +146,10 @@ Use either ```ascending()``` or ```descending()``` in the chain to get your resu
 
 ## Stuffing things into the database
 
-In accordance with REST verbs, ```put``` is used to update a document, and ```post``` is used for creating a new document.
+In accordance with REST verbs, ```put``` is used to update a document, and ```post``` is used for creating a new document. ```into``` is used to specify which collection these modifications will be made, note that ```into``` is the last call on the chain, it is the function that returns the promise for the entire query. 
 
 ### PUT
-Use ```put```, ```where``` and ```into``` to update a document with new values. You can modify an existing field, or add an entire new one. 
+Use ```put```, ```where``` and ```into``` to update a document with new values. You can modify an existing field, or add an entire new one. Note that ```put``` must have a corresponding ```where``` in order to work. 
 
 ```javascript
 Tongo.put({
