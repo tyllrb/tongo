@@ -31,33 +31,233 @@
         <hr>
 
         <section id="main_content">
-          <h3>
-<a id="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages" aria-hidden="true"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+          <h1>
+<a id="tongo" class="anchor" href="#tongo" aria-hidden="true"><span class="octicon octicon-link"></span></a>tongo</h1>
 
-<p>Tongo lets you construct complex and chained mongoose database queries with a simple SQL like approach to syntax. Building out big queries that rely on the results of other queries is much easier, and a simple internal cache system will automatically return the results of a query that has already been executed previously. But enough of the flowery appraisal, lets take a look at some code! </p>
+<p>Node library that adds some tasty syntax sugar to mongodb. Use chaining and promises to string together long complex queries. </p>
+
+<h1>
+<a id="examples" class="anchor" href="#examples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Examples</h1>
+
+<h2>
+<a id="connecting" class="anchor" href="#connecting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Connecting</h2>
+
+<p>Connecting is pretty straightforward</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">var</span> Tongo <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>tongo<span class="pl-pds">'</span></span>);
+
+<span class="pl-smi">Tongo</span>.<span class="pl-en">connect</span>({
+    <span class="pl-s"><span class="pl-pds">'</span>user<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>password<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>the_password<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>server<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>mongo.server.com<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>database<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>the_database<span class="pl-pds">'</span></span>
+})
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> () {
+
+    <span class="pl-c">// connection was success</span>
+
+})
+.<span class="pl-en">catch</span>(<span class="pl-k">function</span> (<span class="pl-smi">error</span>) {
+
+    <span class="pl-c">// hmm some error occured connecting</span>
+
+});</pre></div>
+
+<h2>
+<a id="how-to-get-things-from-the-database" class="anchor" href="#how-to-get-things-from-the-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>How to get things from the database</h2>
 
 <h3>
-<a id="getting-values" class="anchor" href="#getting-values" aria-hidden="true"><span class="octicon octicon-link"></span></a>Getting values</h3>
+<a id="get" class="anchor" href="#get" aria-hidden="true"><span class="octicon octicon-link"></span></a>GET</h3>
 
-<p>Getting values are pretty straightforward
-    tongo.get('value1').from('er').where({'bob': 1}).then((results) =&gt; {
-        console.log(results);
-    });</p>
+<p>Use <code>get</code> and <code>from</code> to get the values of specific fields from a collection. Use <code>*</code> to get all the fields. Note that <code>from</code> must be the last call on the chain, it is the function that returns the promise. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>pic<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">from</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)
+.<span class="pl-en">limit</span>(<span class="pl-c1">5</span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">//do something with data</span>
+
+})</pre></div>
 
 <h3>
-<a id="creating-pages-manually" class="anchor" href="#creating-pages-manually" aria-hidden="true"><span class="octicon octicon-link"></span></a>Creating pages manually</h3>
+<a id="where" class="anchor" href="#where" aria-hidden="true"><span class="octicon octicon-link"></span></a>WHERE</h3>
 
-<p>If you prefer to not use the automatic generator, push a branch named <code>gh-pages</code> to your repository to create a page manually. In addition to supporting regular HTML content, GitHub Pages support Jekyll, a simple, blog aware static site generator. Jekyll makes it easy to create site-wide headers and footers without having to copy them across every page. It also offers intelligent blog support and other advanced templating features.</p>
+<p>Use <code>where</code> to get fields based on certain conditional values. You can include as many conditions as you like. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>pic<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Tyler<span class="pl-pds">'</span></span>})
+.<span class="pl-en">from</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">//do something with data</span>
+
+});</pre></div>
+
+<h4>
+<a id="where-operations" class="anchor" href="#where-operations" aria-hidden="true"><span class="octicon octicon-link"></span></a>WHERE operations</h4>
+
+<p>You can specify certain operations for the fields specified in <code>WHERE</code>. </p>
+
+<ul>
+<li>
+<code>:hash</code> will hash the value you are passing in</li>
+<li>
+<code>:any</code> is used for fields with arrays, checks to see if the value(s) you have passed in is found in the array</li>
+</ul>
+
+<p>Example:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>*<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>password:hash<span class="pl-pds">'</span></span><span class="pl-k">:</span> password, <span class="pl-s"><span class="pl-pds">'</span>friendList:any<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Bob<span class="pl-pds">'</span></span>})
+.<span class="pl-en">from</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)</pre></div>
+
+<h4>
+<a id="multiples" class="anchor" href="#multiples" aria-hidden="true"><span class="octicon octicon-link"></span></a>Multiples!</h4>
+
+<p>You can also <code>get</code> from multiple collections at once. Using <code>get</code> and <code>where</code> can act as a basic joining of two datasets from different collections. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>comment<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>pic<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Tyler<span class="pl-pds">'</span></span>})
+.<span class="pl-en">from</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>, <span class="pl-s"><span class="pl-pds">'</span>comments<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">//do something with data</span>
+
+});</pre></div>
+
+<p>Here the <code>data</code> will be an object with a field for the results of getting <code>'users'</code>, and a field for the results of getting <code>'comments'</code>.</p>
 
 <h3>
-<a id="authors-and-contributors" class="anchor" href="#authors-and-contributors" aria-hidden="true"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+<a id="get-single-record" class="anchor" href="#get-single-record" aria-hidden="true"><span class="octicon octicon-link"></span></a>GET single record</h3>
 
-<p>You can <a href="https://github.com/blog/821" class="user-mention">@mention</a> a GitHub username to generate a link to their profile. The resulting <code>&lt;a&gt;</code> element will link to the contributor’s GitHub Profile. For example: In 2007, Chris Wanstrath (<a href="https://github.com/defunkt" class="user-mention">@defunkt</a>), PJ Hyett (<a href="https://github.com/pjhyett" class="user-mention">@pjhyett</a>), and Tom Preston-Werner (<a href="https://github.com/mojombo" class="user-mention">@mojombo</a>) founded GitHub.</p>
+<p>Use <code>single</code> to query for a single document, useful for when you are expecting just one result.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>pic<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">single</span>()
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Tyler<span class="pl-pds">'</span></span>})
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">// do something with data</span>
+
+});</pre></div>
 
 <h3>
-<a id="support-or-contact" class="anchor" href="#support-or-contact" aria-hidden="true"><span class="octicon octicon-link"></span></a>Support or Contact</h3>
+<a id="paging" class="anchor" href="#paging" aria-hidden="true"><span class="octicon octicon-link"></span></a>Paging</h3>
 
-<p>Having trouble with Pages? Check out our <a href="https://help.github.com/pages">documentation</a> or <a href="https://github.com/contact">contact support</a> and we’ll help you sort it out.</p>
+<p>Use <code>page</code> and <code>limit</code> to jump forward in the data by a certain amount. Fetching 3 documents on page 0 will get you the first 3 documents, fetching 3 documents on page 1 will get you the 3rd, 4th, and 5th document, fetching 3 documents on page 2 will get you the 6th, 7th, and 8th record, and so on. Useful for implementing paging controls in your UI. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">get</span>(
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>pic<span class="pl-pds">'</span></span>
+)
+.<span class="pl-en">limit</span>(<span class="pl-c1">3</span>)
+.<span class="pl-en">page</span>(<span class="pl-c1">1</span>)
+.<span class="pl-en">from</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">// you got the 3rd, 4th, and 5th user</span>
+
+});</pre></div>
+
+<h3>
+<a id="sorting" class="anchor" href="#sorting" aria-hidden="true"><span class="octicon octicon-link"></span></a>Sorting</h3>
+
+<p>Use either <code>ascending()</code> or <code>descending()</code> in the chain to get your results in those respective orders</p>
+
+<h2>
+<a id="stuffing-things-into-the-database" class="anchor" href="#stuffing-things-into-the-database" aria-hidden="true"><span class="octicon octicon-link"></span></a>Stuffing things into the database</h2>
+
+<p>In accordance with REST verbs, <code>put</code> is used to update a document, and <code>post</code> is used for creating a new document. <code>into</code> is used to specify which collection these modifications will be made, note that <code>into</code> is the last call on the chain, it is the function that returns the promise for the entire query. </p>
+
+<h3>
+<a id="put" class="anchor" href="#put" aria-hidden="true"><span class="octicon octicon-link"></span></a>PUT</h3>
+
+<p>Use <code>put</code>, <code>where</code> and <code>into</code> to update a document with new values. You can modify an existing field, or add an entire new one. Note that <code>put</code> must have a corresponding <code>where</code> in order to work. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">put</span>({
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Tyler2<span class="pl-pds">'</span></span>, <span class="pl-c">// will update the username field with a new value</span>
+    <span class="pl-s"><span class="pl-pds">'</span>newFied<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Hello<span class="pl-pds">'</span></span> <span class="pl-c">// this is an entirely new field inserted into the document</span>
+})
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Tyler<span class="pl-pds">'</span></span>})
+.<span class="pl-en">into</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">// data will be the updated document</span>
+
+});</pre></div>
+
+<h4>
+<a id="put-array-operations" class="anchor" href="#put-array-operations" aria-hidden="true"><span class="octicon octicon-link"></span></a>PUT array operations</h4>
+
+<p>Performing array operations is pretty basic, use <code>:add</code> to add something to the array and <code>:removed</code> to remove it. For example, say you have a 'like' array that holds the usernames of those who have 'liked' something. Here is how you would add a new username to that list:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">put</span>({
+    <span class="pl-s"><span class="pl-pds">'</span>likes:add<span class="pl-pds">'</span></span><span class="pl-k">:</span> username
+})
+.<span class="pl-en">where</span>({<span class="pl-s"><span class="pl-pds">'</span>postId<span class="pl-pds">'</span></span><span class="pl-k">:</span> postId})
+.<span class="pl-en">into</span>(<span class="pl-s"><span class="pl-pds">'</span>posts<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">// data will be the updated document</span>
+
+});</pre></div>
+
+<h3>
+<a id="post-new-document" class="anchor" href="#post-new-document" aria-hidden="true"><span class="octicon octicon-link"></span></a>POST new document</h3>
+
+<p>Use <code>post</code> and <code>into</code> to create a new document in a specified collection. Like using <code>where</code>, multiple collections can be specified. </p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">post</span>({
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>New_User :)<span class="pl-pds">'</span></span>
+})
+.<span class="pl-en">into</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>)
+.<span class="pl-en">then</span>(<span class="pl-k">function</span> (<span class="pl-smi">data</span>) {
+
+    <span class="pl-c">// data will be the newly created document</span>
+
+});</pre></div>
+
+<h4>
+<a id="post-aliases" class="anchor" href="#post-aliases" aria-hidden="true"><span class="octicon octicon-link"></span></a>POST aliases</h4>
+
+<p>There are few aliases you can use to generate certain values. </p>
+
+<ul>
+<li>
+<code>$timestamp</code> will generate a UNIX timestamp </li>
+<li>
+<code>$id</code> will generate a random string</li>
+</ul>
+
+<p>Heres how to use them:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-smi">Tongo</span>.<span class="pl-en">post</span>({
+    <span class="pl-s"><span class="pl-pds">'</span>username<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>Bob<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>date_joined<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>$timestamp<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>userId<span class="pl-pds">'</span></span><span class="pl-k">:</span> <span class="pl-s"><span class="pl-pds">'</span>$id<span class="pl-pds">'</span></span>
+})
+.<span class="pl-en">into</span>(<span class="pl-s"><span class="pl-pds">'</span>users<span class="pl-pds">'</span></span>);</pre></div>
         </section>
 
         <footer>
