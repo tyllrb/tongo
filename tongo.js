@@ -199,12 +199,6 @@ var Tongo = {
 		var buildProjections = {};
 
 		for (var i = 0; i < arguments.length; i++) {
-			// if '*' is encountered then ignore the other fields, because '*' will get them all
-			if (arguments[i] === '*') {
-				this.query.projections = '';
-				return this;
-			}
-
 			buildProjections [arguments [i]] = 1;
 		}
 
@@ -335,6 +329,28 @@ var Tongo = {
 	}
 }
 
+var Cache = {
+
+	cache: {},
+	cacheLimit: 100,
+
+	add: function (field, value) {
+		var fields = Object.keys(cache);
+
+		if (fields.length >= cacheLimit) {
+			delete cache [fields [0]];
+		}
+
+		cache [field] = value;
+
+		console.log(cache);
+	},
+
+	has: function (field) {
+		return cache [field];
+	}
+
+}
 
 module.exports = Tongo;
 
